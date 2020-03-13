@@ -11,10 +11,6 @@
         <local:MainWindowViewModel/>
     </Window.DataContext>
 
-    <Window.Resources>
-        <local:StringToImageSourceConverter x:Key="StringToImageSource"/>
-    </Window.Resources>
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -28,7 +24,7 @@
             <TextBox Text="{Binding PicPath}" VerticalContentAlignment="Center"/>
             <Button Command="{Binding LoadPicCommand}" Content="..." Grid.Column="1" Margin="10, 5"/>
         </Grid>
-        <Image Source="{Binding PicPath, Converter={StaticResource StringToImageSource}}" 
+        <Image Source="{Binding PicPath, Converter={x:Static local:StringToImageSourceConverter.Instance}}" 
                Grid.Row="1"
                Panel.ZIndex="-1"
                RenderOptions.BitmapScalingMode="NearestNeighbor"

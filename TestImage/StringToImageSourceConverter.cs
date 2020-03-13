@@ -6,6 +6,14 @@ namespace TestImage
 {
     class StringToImageSourceConverter : IValueConverter
     {
+
+        static StringToImageSourceConverter()
+        {
+            Instance = new StringToImageSourceConverter();
+        }
+
+        public static StringToImageSourceConverter Instance { get; }
+
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             string path = (string)value;
