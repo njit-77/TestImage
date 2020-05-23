@@ -11,8 +11,10 @@ namespace TestImage
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Point StartPosition;
-        private Point EndPosition;
+        private const double ZoomOutScaleValue = 1.1;
+        private const double ZoomInScaleValue = 1 / ZoomOutScaleValue;
+        private Point start;
+        private Point origin;
 
         public MainWindow()
         {
@@ -24,7 +26,9 @@ namespace TestImage
             Image img = sender as Image;
             if (img != null)
             {
-                StartPosition = e.GetPosition(img);
+                start = e.GetPosition(img);
+                origin.X = img.RenderTransform.Value.OffsetX;
+                origin.Y = img.RenderTransform.Value.OffsetY;
             }
         }
 
@@ -33,24 +37,13 @@ namespace TestImage
             Image img = sender as Image;
             if (img != null)
             {
-                var tg = img.RenderTransform as TransformGroup;
+                Matrix m = img.RenderTransform.Value;
 
-                if (tg != null)
-                {
-                    var translateTransform = tg.Children[0] as TranslateTransform;
-                    if (translateTransform != null)
-                    {
-                        translateTransform.X = 0;
-                        translateTransform.Y = 0;
-                    }
+                m.M11 = m.M22 = 1;
+                m.M12 = m.M21 = 0;
+                m.OffsetX = m.OffsetY = 0;
 
-                    var scaleTransform = tg.Children[1] as ScaleTransform;
-                    if (scaleTransform != null)
-                    {
-                        scaleTransform.ScaleX = 1;
-                        scaleTransform.ScaleY = 1;
-                    }
-                }
+                img.RenderTransform = new MatrixTransform(m);
             }
         }
 
@@ -59,35 +52,14 @@ namespace TestImage
             Image img = sender as Image;
             if (img != null && e.LeftButton == MouseButtonState.Pressed)
             {
-                EndPosition = e.GetPosition(img);
+                var control = img.Parent as FrameworkElement;
 
-                TransformGroup tg = img.RenderTransform as TransformGroup;
-                if (tg != null)
-                {
-                    var translateTransform = tg.Children[0] as TranslateTransform;
-                    var scaleTransform = tg.Children[1] as ScaleTransform;
-                    if (scaleTransform != null && translateTransform != null)
-                    {
-                        var control = img.Parent as FrameworkElement;
+                Point p = e.GetPosition(img);
+                Matrix m = img.RenderTransform.Value;
 
-                        var matrix = ((MatrixTransform)scaleTransform.Inverse).Value;
+                SetImageBorder(ref m, p, img, control);
 
-                        if (img.ActualWidth * scaleTransform.ScaleX > control.ActualWidth)
-                        {
-                            translateTransform.X += EndPosition.X - StartPosition.X;
-
-                            translateTransform.X = (translateTransform.X > 0 ? 1 : -1) *
-                                Math.Min(Math.Abs(matrix.OffsetX - (control.ActualWidth - img.ActualWidth) * 0.5 / scaleTransform.ScaleX), Math.Abs(translateTransform.X));
-                        }
-                        if (img.ActualHeight * scaleTransform.ScaleY > control.ActualHeight)
-                        {
-                            translateTransform.Y += EndPosition.Y - StartPosition.Y;
-
-                            translateTransform.Y = (translateTransform.Y > 0 ? 1 : -1) *
-                                Math.Min(Math.Abs(matrix.OffsetY - (control.ActualHeight - img.ActualHeight) * 0.5 / scaleTransform.ScaleY), Math.Abs(translateTransform.Y));
-                        }
-                    }
-                }
+                img.RenderTransform = new MatrixTransform(m);
             }
         }
 
@@ -96,60 +68,30 @@ namespace TestImage
             Image img = sender as Image;
             if (img != null)
             {
-                double scaleValue = 0.5;
+                var control = img.Parent as FrameworkElement;
+
+                Point p = e.GetPosition(img);
+                Matrix m = img.RenderTransform.Value;
                 if (e.Delta > 0)
-                {
-                    scaleValue *= 1;
-                }
-                else if (e.Delta < 0)
-                {
-                    scaleValue *= -1;
-                }
+                    m.ScaleAtPrepend(ZoomOutScaleValue, ZoomOutScaleValue, p.X, p.Y);
+                else
+                    m.ScaleAtPrepend(ZoomInScaleValue, ZoomInScaleValue, p.X, p.Y);
 
-                var tg = img.RenderTransform as TransformGroup;
-                if (tg != null)
-                {
-                    var translateTransform = tg.Children[0] as TranslateTransform;
-                    var scaleTransform = tg.Children[1] as ScaleTransform;
-                    if (scaleTransform != null)
-                    {
-                        var control = img.Parent as FrameworkElement;
+                img.RenderTransform = new MatrixTransform(m);
+            }
+        }
 
-                        var matrix = ((MatrixTransform)scaleTransform.Inverse).Value;
-
-                        scaleTransform.CenterX = img.ActualWidth * 0.5;
-                        scaleTransform.CenterY = img.ActualHeight * 0.5;
-
-                        scaleTransform.ScaleX += scaleValue;
-                        scaleTransform.ScaleY += scaleValue;
-
-                        scaleTransform.ScaleX = Math.Max(0.5, scaleTransform.ScaleX);
-                        scaleTransform.ScaleY = Math.Max(0.5, scaleTransform.ScaleY);
-                        //scaleTransform.ScaleX = Math.Min(21, scaleTransform.ScaleX);
-                        //scaleTransform.ScaleY = Math.Min(21, scaleTransform.ScaleY);
-
-                        if (img.ActualWidth * scaleTransform.ScaleX > control.ActualWidth)
-                        {
-                            translateTransform.X += EndPosition.X - StartPosition.X;
-
-                            translateTransform.X = (translateTransform.X > 0 ? 1 : -1) *
-                                Math.Min(Math.Abs(matrix.OffsetX - (control.ActualWidth - img.ActualWidth) * 0.5 / scaleTransform.ScaleX), Math.Abs(translateTransform.X));
-                        }
-                        if (img.ActualHeight * scaleTransform.ScaleY > control.ActualHeight)
-                        {
-                            translateTransform.Y += EndPosition.Y - StartPosition.Y;
-
-                            translateTransform.Y = (translateTransform.Y > 0 ? 1 : -1) *
-                                Math.Min(Math.Abs(matrix.OffsetY - (control.ActualHeight - img.ActualHeight) * 0.5 / scaleTransform.ScaleY), Math.Abs(translateTransform.Y));
-                        }
-
-                        if (Math.Abs(scaleTransform.ScaleX - 0.5) < 1e-7)
-                        {
-                            translateTransform.X = 0;
-                            translateTransform.Y = 0;
-                        }
-                    }
-                }
+        private void SetImageBorder(ref Matrix m, Point p, Image img, FrameworkElement control)
+        {
+            double diffX = (p.X - start.X) * m.M11;
+            double diffY = (p.Y - start.Y) * m.M22;
+            if (img.ActualWidth * m.M11 > control.ActualWidth)
+            {
+                m.OffsetX = origin.X + diffX;
+            }
+            if (img.ActualHeight * m.M22 > control.ActualHeight)
+            {
+                m.OffsetY = origin.Y + diffY;
             }
         }
 
