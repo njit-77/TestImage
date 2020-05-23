@@ -24,22 +24,19 @@
             <TextBox Text="{Binding PicPath}" VerticalContentAlignment="Center"/>
             <Button Command="{Binding LoadPicCommand}" Content="..." Grid.Column="1" Margin="10, 5"/>
         </Grid>
-        <Image Source="{Binding PicPath, Converter={x:Static local:StringToImageSourceConverter.Instance}}" 
-               Grid.Row="1"
-               Panel.ZIndex="-1"
-               RenderOptions.BitmapScalingMode="NearestNeighbor"
-               MouseLeftButtonDown="Image_MouseLeftButtonDown"
-               MouseRightButtonDown="Image_MouseRightButtonDown"
-               MouseMove="Image_MouseMove"
-               MouseWheel="Image_MouseWheel"
-               MouseEnter="Image_MouseEnter"
-               MouseLeave="Image_MouseLeave">
-            <Image.RenderTransform>
-                <TransformGroup>
-                    <TranslateTransform/>
-                    <ScaleTransform/>
-                </TransformGroup>
-            </Image.RenderTransform>
-        </Image>
+        <ScrollViewer VerticalScrollBarVisibility="Disabled" Grid.Row="1">
+            <Border BorderBrush="Black" 
+                    BorderThickness="2" 
+                    Margin="1">
+                <Image Source="{Binding PicPath, Converter={x:Static local:StringToImageSourceConverter.Instance}}" 
+                       MouseLeftButtonDown="Image_MouseLeftButtonDown"
+                       MouseRightButtonDown="Image_MouseRightButtonDown"
+                       MouseMove="Image_MouseMove"
+                       MouseWheel="Image_MouseWheel"
+                       MouseEnter="Image_MouseEnter"
+                       MouseLeave="Image_MouseLeave">
+                </Image>
+            </Border>
+        </ScrollViewer>
     </Grid>
 </Window>
